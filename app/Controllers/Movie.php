@@ -33,6 +33,12 @@ class Movie extends Controller
         return $this->response->setJSON($data['results'] ?? []);
     }
 
+    // ─── NEARBY CINEMAS PAGE ──────────────────────────────────────
+    public function nearby()
+    {
+        return view('nearby');
+    }
+
     // ─── MOVIE DETAIL ─────────────────────────────────────────────
     public function detail($id = null)
     {
@@ -54,7 +60,7 @@ class Movie extends Controller
                       ->get()
                       ->getResultArray();
 
-        // Check if current user has this in their watchlist
+        // Check watchlist status
         $inWatchlist = false;
         if (session()->get('is_logged_in')) {
             $watchlistModel = new WatchlistModel();
@@ -92,14 +98,7 @@ class Movie extends Controller
         }
 
         $reviewModel = new ReviewModel();
-        $data = [
-            'user_id'  => $userId,
-            'movie_id' => $movieId,
-            'rating'   => (int) $rating,
-            'comment'  => $comment,
-        ];
-
-        if ($reviewModel->insert($data)) {
+        if ($reviewModel->insert(['user_id' => $userId, 'movie_id' => $movieId, 'rating' => (int)$rating, 'comment' => $comment])) {
             return $this->response->setJSON(['success' => true]);
         }
 
@@ -120,22 +119,19 @@ class Movie extends Controller
 
         $movieId = $this->request->getPost('movie_id');
         if (!$movieId) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Invalid movie.']);
+            return $this->response->setJSON(['success' => false]);
         }
 
         $watchlistModel = new WatchlistModel();
-        $existing = $watchlistModel
-            ->where('user_id', $userId)
-            ->where('movie_id', $movieId)
-            ->first();
+        $existing = $watchlistModel->where('user_id', $userId)->where('movie_id', $movieId)->first();
 
         if ($existing) {
             $watchlistModel->where('user_id', $userId)->where('movie_id', $movieId)->delete();
             return $this->response->setJSON(['success' => true, 'action' => 'removed']);
-        } else {
-            $watchlistModel->insert(['user_id' => $userId, 'movie_id' => $movieId]);
-            return $this->response->setJSON(['success' => true, 'action' => 'added']);
         }
+
+        $watchlistModel->insert(['user_id' => $userId, 'movie_id' => $movieId]);
+        return $this->response->setJSON(['success' => true, 'action' => 'added']);
     }
 
     // ─── WATCHLIST PAGE ───────────────────────────────────────────
@@ -146,18 +142,16 @@ class Movie extends Controller
             return redirect()->to('/user/login');
         }
 
-        $userId = session()->get('user_id');
         $db = \Config\Database::connect();
         $watchlistItems = $db->table('watchlist')
-                             ->where('user_id', $userId)
+                             ->where('user_id', session()->get('user_id'))
                              ->orderBy('created_at', 'DESC')
                              ->get()
                              ->getResultArray();
 
-        // Fetch movie details from TMDB for each item
         $movies = [];
         foreach ($watchlistItems as $item) {
-            $url = "https://api.themoviedb.org/3/movie/{$item['movie_id']}?api_key={$this->apiKey}&language=en-US";
+            $url = "https://api.themoviedb.org/3/movie/{$item['movie_id']}?api_key={$this->apiKey}";
             $response = @file_get_contents($url);
             if ($response !== false) {
                 $movie = json_decode($response, true);

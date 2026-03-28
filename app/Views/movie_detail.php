@@ -19,24 +19,27 @@ if (!empty($movie['videos']['results'])) {
     }
 }
 
-$cast = array_slice($movie['credits']['cast'] ?? [], 0, 8);
+$cast      = array_slice($movie['credits']['cast'] ?? [], 0, 8);
 $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] === 'Director');
 ?>
 
 <!-- Backdrop Banner -->
 <?php if ($backdrop): ?>
 <div style="background: linear-gradient(to bottom, rgba(18,18,18,0) 0%, #121212 100%),
-            url('<?= $backdrop ?>') center/cover no-repeat; height: 320px; margin: -1.5rem -12px 2rem; padding: 2rem;">
+            url('<?= $backdrop ?>') center/cover no-repeat;
+            height: 280px; margin: -1.5rem -12px 2rem; padding: 2rem;">
 </div>
 <?php endif; ?>
 
 <!-- Movie Header -->
 <div class="row mb-5">
     <div class="col-md-3 text-center mb-3">
-        <img src="<?= $poster ?>" alt="<?= esc($movie['title']) ?>" class="img-fluid rounded shadow" style="max-height:400px;">
+        <img src="<?= $poster ?>" alt="<?= esc($movie['title']) ?>"
+             class="img-fluid rounded shadow" style="max-height:400px;">
     </div>
     <div class="col-md-9">
-        <h1 class="text-white fw-bold"><?= esc($movie['title']) ?>
+        <h1 class="text-white fw-bold">
+            <?= esc($movie['title']) ?>
             <span class="text-muted fs-4">(<?= substr($movie['release_date'] ?? '----', 0, 4) ?>)</span>
         </h1>
 
@@ -51,7 +54,7 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
             <?php endforeach; ?>
         </div>
 
-        <!-- Stats Row -->
+        <!-- Stats -->
         <div class="d-flex gap-4 mb-3 flex-wrap">
             <div class="text-center">
                 <div class="text-warning fw-bold fs-4"><?= number_format($movie['vote_average'] ?? 0, 1) ?> ★</div>
@@ -83,7 +86,6 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
         </p>
         <?php endif; ?>
 
-        <!-- Overview -->
         <p class="text-light mt-2" style="line-height:1.7;"><?= esc($movie['overview'] ?? '') ?></p>
 
         <!-- Watchlist Button -->
@@ -94,7 +96,9 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
                 <?= $inWatchlist ? '✅ In Watchlist' : '+ Add to Watchlist' ?>
             </button>
         <?php else: ?>
-            <a href="<?= base_url('user/login') ?>" class="btn btn-outline-warning mt-2">Login to add to Watchlist</a>
+            <a href="<?= base_url('user/login') ?>" class="btn btn-outline-warning mt-2">
+                Login to add to Watchlist
+            </a>
         <?php endif; ?>
     </div>
 </div>
@@ -103,7 +107,7 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
 <?php if ($trailer): ?>
 <div class="mb-5">
     <h3 class="text-white mb-3">🎬 Trailer</h3>
-    <div class="ratio ratio-16x9" style="max-width: 720px;">
+    <div class="ratio ratio-16x9" style="max-width:720px;">
         <iframe src="https://www.youtube.com/embed/<?= $trailer ?>"
                 allowfullscreen title="Trailer"></iframe>
     </div>
@@ -122,7 +126,8 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
                     <img src="https://image.tmdb.org/t/p/w185<?= $actor['profile_path'] ?>"
                          class="card-img-top rounded-top" alt="<?= esc($actor['name']) ?>">
                 <?php else: ?>
-                    <div class="bg-secondary d-flex align-items-center justify-content-center rounded-top" style="height:140px;">
+                    <div class="bg-secondary d-flex align-items-center justify-content-center rounded-top"
+                         style="height:140px;">
                         <span class="text-muted">No Photo</span>
                     </div>
                 <?php endif; ?>
@@ -137,11 +142,10 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
 </div>
 <?php endif; ?>
 
-<!-- Reviews Section -->
+<!-- Reviews -->
 <div class="mb-5">
     <h3 class="text-white mb-3">💬 Reviews</h3>
 
-    <!-- Add Review Form (logged in only) -->
     <?php if (session()->get('is_logged_in')): ?>
     <div class="card border-0 mb-4 p-3" style="background:#1e1e1e;">
         <h5 class="text-warning mb-3">Write a Review</h5>
@@ -174,7 +178,6 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
     </div>
     <?php endif; ?>
 
-    <!-- Existing Reviews -->
     <div id="reviewsList">
         <?php if (empty($reviews)): ?>
             <p class="text-muted">No reviews yet. Be the first!</p>
@@ -182,9 +185,7 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
             <?php foreach ($reviews as $review): ?>
             <div class="card border-0 mb-3 p-3" style="background:#1e1e1e;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-warning fw-bold">
-                        <?= esc($review['username'] ?? 'User') ?>
-                    </span>
+                    <span class="text-warning fw-bold"><?= esc($review['username'] ?? 'User') ?></span>
                     <div>
                         <span class="badge bg-warning text-dark"><?= $review['rating'] ?> ★</span>
                         <span class="text-muted small ms-2">
@@ -200,16 +201,29 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
 </div>
 
 <script>
-const movieId  = <?= (int)$movie['id'] ?>;
-const baseUrl  = document.querySelector('meta[name="base-url"]').getAttribute('content');
+const movieId = <?= (int)$movie['id'] ?>;
+const baseUrl = document.querySelector('meta[name="base-url"]').getAttribute('content');
 
-// ── Watchlist ──────────────────────────────────────────────────
+// ── Save to localStorage (recently viewed) ────────────────────
+if (window.saveRecentlyViewed) {
+    saveRecentlyViewed({
+        id:     <?= (int)$movie['id'] ?>,
+        title:  <?= json_encode($movie['title'] ?? '') ?>,
+        poster: <?= json_encode($movie['poster_path'] ?? null) ?>,
+        rating: <?= json_encode(number_format($movie['vote_average'] ?? 0, 1)) ?>
+    });
+}
+
+// ── Watchlist toggle ──────────────────────────────────────────
 const wBtn = document.getElementById('watchlistBtn');
 if (wBtn) {
     wBtn.addEventListener('click', function () {
         fetch(baseUrl + 'movie/toggleWatchlist', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             body: 'movie_id=' + movieId + '&<?= csrf_token() ?>=' + '<?= csrf_hash() ?>'
         })
         .then(r => r.json())
@@ -227,7 +241,7 @@ if (wBtn) {
     });
 }
 
-// ── Submit Review ─────────────────────────────────────────────
+// ── Submit review ─────────────────────────────────────────────
 const submitBtn = document.getElementById('submitReview');
 if (submitBtn) {
     submitBtn.addEventListener('click', function () {
@@ -245,9 +259,14 @@ if (submitBtn) {
 
         fetch(baseUrl + 'movie/addReview', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-            body: 'movie_id=' + movieId + '&rating=' + rating + '&comment=' + encodeURIComponent(comment)
-                  + '&<?= csrf_token() ?>=' + '<?= csrf_hash() ?>'
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: 'movie_id=' + movieId
+                + '&rating=' + rating
+                + '&comment=' + encodeURIComponent(comment)
+                + '&<?= csrf_token() ?>=' + '<?= csrf_hash() ?>'
         })
         .then(r => r.json())
         .then(data => {
@@ -255,17 +274,16 @@ if (submitBtn) {
                 alertEl.innerHTML = '<div class="alert alert-success">Review posted!</div>';
                 document.getElementById('reviewComment').value = '';
 
-                // Prepend new review to list
                 const list = document.getElementById('reviewsList');
-                const noReviews = list.querySelector('p.text-muted');
-                if (noReviews) noReviews.remove();
+                const empty = list.querySelector('p.text-muted');
+                if (empty) empty.remove();
 
                 const div = document.createElement('div');
                 div.className = 'card border-0 mb-3 p-3';
                 div.style.background = '#1e1e1e';
                 div.innerHTML = `
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-warning fw-bold"><?= esc(session()->get('username')) ?></span>
+                        <span class="text-warning fw-bold"><?= esc(session()->get('username') ?? 'You') ?></span>
                         <div>
                             <span class="badge bg-warning text-dark">${rating} ★</span>
                             <span class="text-muted small ms-2">Just now</span>
@@ -274,7 +292,7 @@ if (submitBtn) {
                     <p class="text-light mb-0">${comment.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`;
                 list.insertBefore(div, list.firstChild);
             } else {
-                alertEl.innerHTML = '<div class="alert alert-danger">' + (data.message || 'Failed to post review.') + '</div>';
+                alertEl.innerHTML = `<div class="alert alert-danger">${data.message || 'Failed to post review.'}</div>`;
             }
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Review';
