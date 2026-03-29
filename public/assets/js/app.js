@@ -116,8 +116,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                     : `<div style="width:42px;height:63px;background:#333;border-radius:4px;flex-shrink:0;"></div>`
                                 }
                                 <div style="overflow:hidden;">
-                                    <div class="fw-bold text-truncate">${movie.title}</div>
-                                    <div class="text-muted small">${year} &nbsp;·&nbsp; ⭐ ${rating}</div>
+                                    <div style="font-weight:600; color:#fff;">${movie.title}</div>
+                                    <div style="color:#aaa; font-size:0.8rem;">${year} &nbsp;·&nbsp; ⭐ ${rating}</div>
                                 </div>
                             </a>`;
                     });
