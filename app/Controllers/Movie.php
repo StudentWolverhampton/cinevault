@@ -98,11 +98,39 @@ class Movie extends Controller
         }
 
         $reviewModel = new ReviewModel();
-        if ($reviewModel->insert(['user_id' => $userId, 'movie_id' => $movieId, 'rating' => (int)$rating, 'comment' => $comment])) {
+        if ($reviewModel->insert([
+            'user_id'  => $userId,
+            'movie_id' => $movieId,
+            'rating'   => (int) $rating,
+            'comment'  => $comment,
+        ])) {
             return $this->response->setJSON(['success' => true]);
         }
 
         return $this->response->setJSON(['success' => false, 'message' => 'Could not save review.']);
+    }
+
+    // ─── DELETE REVIEW (AJAX) ─────────────────────────────────────
+    public function deleteReview($reviewId = null)
+    {
+        if (!$reviewId || !session()->get('is_logged_in')) {
+            return $this->response->setJSON(['success' => false]);
+        }
+
+        $db = \Config\Database::connect();
+
+        // Make sure the review belongs to the logged-in user
+        $review = $db->table('reviews')
+                     ->where('id', $reviewId)
+                     ->where('user_id', session()->get('user_id'))
+                     ->get()->getRowArray();
+
+        if (!$review) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Review not found.']);
+        }
+
+        $db->table('reviews')->where('id', $reviewId)->delete();
+        return $this->response->setJSON(['success' => true]);
     }
 
     // ─── TOGGLE WATCHLIST (AJAX) ──────────────────────────────────
@@ -123,7 +151,10 @@ class Movie extends Controller
         }
 
         $watchlistModel = new WatchlistModel();
-        $existing = $watchlistModel->where('user_id', $userId)->where('movie_id', $movieId)->first();
+        $existing = $watchlistModel
+            ->where('user_id', $userId)
+            ->where('movie_id', $movieId)
+            ->first();
 
         if ($existing) {
             $watchlistModel->where('user_id', $userId)->where('movie_id', $movieId)->delete();

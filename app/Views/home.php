@@ -30,7 +30,7 @@
                         <?php endif; ?>
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title text-light"><?= esc($movie['title']) ?></h5>
-                            <p class="card-text text-muted small flex-grow-1">
+                            <p class="card-text small flex-grow-1" style="color:#bbb;">
                                 <?= substr($movie['overview'] ?? 'No description available.', 0, 90) ?>...
                             </p>
                             <span class="badge bg-warning text-dark fs-6">

@@ -40,7 +40,7 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
     <div class="col-md-9">
         <h1 class="text-white fw-bold">
             <?= esc($movie['title']) ?>
-            <span class="text-muted fs-4">(<?= substr($movie['release_date'] ?? '----', 0, 4) ?>)</span>
+            <span style="color:#aaa;" class="fs-4">(<?= substr($movie['release_date'] ?? '----', 0, 4) ?>)</span>
         </h1>
 
         <?php if (!empty($movie['tagline'])): ?>
@@ -58,29 +58,29 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
         <div class="d-flex gap-4 mb-3 flex-wrap">
             <div class="text-center">
                 <div class="text-warning fw-bold fs-4"><?= number_format($movie['vote_average'] ?? 0, 1) ?> ★</div>
-                <div class="text-muted small"><?= number_format($movie['vote_count'] ?? 0) ?> votes</div>
+                <div style="color:#aaa;" class="small"><?= number_format($movie['vote_count'] ?? 0) ?> votes</div>
             </div>
             <div class="text-center">
                 <div class="text-white fw-bold fs-4"><?= $movie['runtime'] ?? '?' ?> min</div>
-                <div class="text-muted small">Runtime</div>
+                <div style="color:#aaa;" class="small">Runtime</div>
             </div>
             <?php if (!empty($movie['budget']) && $movie['budget'] > 0): ?>
             <div class="text-center">
                 <div class="text-white fw-bold fs-5">$<?= number_format($movie['budget'] / 1000000, 1) ?>M</div>
-                <div class="text-muted small">Budget</div>
+                <div style="color:#aaa;" class="small">Budget</div>
             </div>
             <?php endif; ?>
             <?php if (!empty($movie['revenue']) && $movie['revenue'] > 0): ?>
             <div class="text-center">
                 <div class="text-success fw-bold fs-5">$<?= number_format($movie['revenue'] / 1000000, 1) ?>M</div>
-                <div class="text-muted small">Revenue</div>
+                <div style="color:#aaa;" class="small">Revenue</div>
             </div>
             <?php endif; ?>
         </div>
 
         <!-- Director -->
         <?php if (!empty($directors)): ?>
-        <p class="text-muted mb-2">
+        <p style="color:#aaa;" class="mb-2">
             <span class="text-light">Directed by:</span>
             <?= esc(implode(', ', array_column(array_values($directors), 'name'))) ?>
         </p>
@@ -128,12 +128,12 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
                 <?php else: ?>
                     <div class="bg-secondary d-flex align-items-center justify-content-center rounded-top"
                          style="height:140px;">
-                        <span class="text-muted">No Photo</span>
+                        <span style="color:#aaa;">No Photo</span>
                     </div>
                 <?php endif; ?>
                 <div class="card-body p-2">
                     <p class="mb-0 text-light small fw-bold"><?= esc($actor['name']) ?></p>
-                    <p class="mb-0 text-muted" style="font-size:0.75rem;"><?= esc($actor['character']) ?></p>
+                    <p class="mb-0" style="color:#aaa; font-size:0.75rem;"><?= esc($actor['character']) ?></p>
                 </div>
             </div>
         </div>
@@ -178,19 +178,24 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
     </div>
     <?php endif; ?>
 
+    <!-- Existing Reviews -->
     <div id="reviewsList">
         <?php if (empty($reviews)): ?>
-            <p class="text-muted">No reviews yet. Be the first!</p>
+            <p style="color:#aaa;">No reviews yet. Be the first!</p>
         <?php else: ?>
             <?php foreach ($reviews as $review): ?>
-            <div class="card border-0 mb-3 p-3" style="background:#1e1e1e;">
+            <div class="card border-0 mb-3 p-3" style="background:#1e1e1e;" id="review-<?= $review['id'] ?>">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="text-warning fw-bold"><?= esc($review['username'] ?? 'User') ?></span>
-                    <div>
+                    <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-warning text-dark"><?= $review['rating'] ?> ★</span>
-                        <span class="text-muted small ms-2">
+                        <span style="color:#aaa;" class="small">
                             <?= date('M d, Y', strtotime($review['created_at'])) ?>
                         </span>
+                        <?php if (session()->get('user_id') == $review['user_id']): ?>
+                            <button class="btn btn-outline-danger btn-sm delete-review-btn"
+                                    data-review-id="<?= $review['id'] ?>">🗑</button>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <p class="text-light mb-0"><?= esc($review['comment']) ?></p>
@@ -274,9 +279,9 @@ if (submitBtn) {
                 alertEl.innerHTML = '<div class="alert alert-success">Review posted!</div>';
                 document.getElementById('reviewComment').value = '';
 
-                const list = document.getElementById('reviewsList');
-                const empty = list.querySelector('p.text-muted');
-                if (empty) empty.remove();
+                const list  = document.getElementById('reviewsList');
+                const empty = list.querySelector('p');
+                if (empty && empty.textContent.includes('No reviews')) empty.remove();
 
                 const div = document.createElement('div');
                 div.className = 'card border-0 mb-3 p-3';
@@ -284,9 +289,9 @@ if (submitBtn) {
                 div.innerHTML = `
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-warning fw-bold"><?= esc(session()->get('username') ?? 'You') ?></span>
-                        <div>
+                        <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-warning text-dark">${rating} ★</span>
-                            <span class="text-muted small ms-2">Just now</span>
+                            <span style="color:#aaa;" class="small">Just now</span>
                         </div>
                     </div>
                     <p class="text-light mb-0">${comment.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`;
@@ -299,6 +304,33 @@ if (submitBtn) {
         });
     });
 }
+
+// ── Delete review ─────────────────────────────────────────────
+document.addEventListener('click', function (e) {
+    if (!e.target.classList.contains('delete-review-btn')) return;
+
+    const btn      = e.target;
+    const reviewId = btn.dataset.reviewId;
+    if (!confirm('Delete this review?')) return;
+
+    fetch(baseUrl + 'movie/deleteReview/' + reviewId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: '<?= csrf_token() ?>=' + '<?= csrf_hash() ?>'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const card = document.getElementById('review-' + reviewId);
+            card.style.transition = 'opacity 0.3s';
+            card.style.opacity = '0';
+            setTimeout(() => card.remove(), 300);
+        }
+    });
+});
 </script>
 
 <?= $this->include('layout/footer') ?>
