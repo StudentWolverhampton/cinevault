@@ -121,7 +121,7 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
     <div class="row g-3">
         <?php foreach ($cast as $actor): ?>
         <div class="col-6 col-md-3">
-            <div class="card border-0 text-center" style="background:#1e1e1e;">
+            <div class="card border-0 text-center movie-card-hover" style="background:#1e1e1e;">
                 <?php if (!empty($actor['profile_path'])): ?>
                     <img src="https://image.tmdb.org/t/p/w185<?= $actor['profile_path'] ?>"
                          class="card-img-top rounded-top" alt="<?= esc($actor['name']) ?>">
@@ -166,9 +166,12 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label text-light">Your Review</label>
+            <label class="form-label text-light">
+                Your Review
+                <span id="charCount" style="color:#aaa; font-size:0.8rem; margin-left:8px;">0 / 500</span>
+            </label>
             <textarea id="reviewComment" class="form-control bg-dark text-light border-secondary"
-                      rows="3" placeholder="Share your thoughts..."></textarea>
+                      rows="3" placeholder="Share your thoughts..." maxlength="500"></textarea>
         </div>
         <button id="submitReview" class="btn btn-warning fw-bold">Submit Review</button>
     </div>
@@ -209,13 +212,24 @@ $directors = array_filter($movie['credits']['crew'] ?? [], fn($c) => $c['job'] =
 const movieId = <?= (int)$movie['id'] ?>;
 const baseUrl = document.querySelector('meta[name="base-url"]').getAttribute('content');
 
-// ── Save to localStorage (recently viewed) ────────────────────
+// ── Save to localStorage ──────────────────────────────────────
 if (window.saveRecentlyViewed) {
     saveRecentlyViewed({
         id:     <?= (int)$movie['id'] ?>,
         title:  <?= json_encode($movie['title'] ?? '') ?>,
         poster: <?= json_encode($movie['poster_path'] ?? null) ?>,
         rating: <?= json_encode(number_format($movie['vote_average'] ?? 0, 1)) ?>
+    });
+}
+
+// ── Character counter ─────────────────────────────────────────
+const commentBox  = document.getElementById('reviewComment');
+const charCount   = document.getElementById('charCount');
+if (commentBox && charCount) {
+    commentBox.addEventListener('input', function () {
+        const len = this.value.length;
+        charCount.textContent = `${len} / 500`;
+        charCount.style.color = len > 450 ? '#dc3545' : '#aaa';
     });
 }
 
@@ -237,9 +251,11 @@ if (wBtn) {
                 if (data.action === 'added') {
                     wBtn.textContent = '✅ In Watchlist';
                     wBtn.className = 'btn btn-success mt-2';
+                    showToast('Added to your watchlist!', 'success');
                 } else {
                     wBtn.textContent = '+ Add to Watchlist';
                     wBtn.className = 'btn btn-outline-warning mt-2';
+                    showToast('Removed from watchlist.', 'danger');
                 }
             }
         });
@@ -251,7 +267,7 @@ const submitBtn = document.getElementById('submitReview');
 if (submitBtn) {
     submitBtn.addEventListener('click', function () {
         const rating  = document.getElementById('reviewRating').value;
-        const comment = document.getElementById('reviewComment').value.trim();
+        const comment = commentBox.value.trim();
         const alertEl = document.getElementById('reviewAlert');
 
         if (!comment) {
@@ -276,8 +292,10 @@ if (submitBtn) {
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                alertEl.innerHTML = '<div class="alert alert-success">Review posted!</div>';
-                document.getElementById('reviewComment').value = '';
+                alertEl.innerHTML = '';
+                commentBox.value = '';
+                charCount.textContent = '0 / 500';
+                showToast('Review posted successfully!', 'success');
 
                 const list  = document.getElementById('reviewsList');
                 const empty = list.querySelector('p');
@@ -298,6 +316,7 @@ if (submitBtn) {
                 list.insertBefore(div, list.firstChild);
             } else {
                 alertEl.innerHTML = `<div class="alert alert-danger">${data.message || 'Failed to post review.'}</div>`;
+                showToast(data.message || 'Failed to post review.', 'danger');
             }
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Review';
@@ -328,6 +347,7 @@ document.addEventListener('click', function (e) {
             card.style.transition = 'opacity 0.3s';
             card.style.opacity = '0';
             setTimeout(() => card.remove(), 300);
+            showToast('Review deleted.', 'danger');
         }
     });
 });
