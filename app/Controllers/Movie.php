@@ -14,7 +14,25 @@ class Movie extends Controller
     public function index()
     {
         $movies = $this->getTrending();
-        return view('home', ['movies' => $movies]);
+        $genres = $this->getGenres();
+        return view('home', ['movies' => $movies, 'genres' => $genres]);
+    }
+
+    // ─── FILTER BY GENRE (AJAX) ───────────────────────────────────
+    public function filterGenre()
+    {
+        $genreId = $this->request->getGet('genre_id');
+
+        if (!$genreId || $genreId === 'trending') {
+            $movies = $this->getTrending();
+        } else {
+            $url = "https://api.themoviedb.org/3/discover/movie?api_key={$this->apiKey}&with_genres={$genreId}&sort_by=popularity.desc&language=en-US";
+            $response = @file_get_contents($url);
+            $data = $response ? json_decode($response, true) : [];
+            $movies = $data['results'] ?? [];
+        }
+
+        return $this->response->setJSON($movies);
     }
 
     // ─── SEARCH (AJAX) ────────────────────────────────────────────
@@ -50,7 +68,6 @@ class Movie extends Controller
 
         $movie = json_decode($response, true);
 
-        // Get reviews joined with username
         $db = \Config\Database::connect();
         $reviews = $db->table('reviews')
                       ->select('reviews.*, users.username')
@@ -60,7 +77,6 @@ class Movie extends Controller
                       ->get()
                       ->getResultArray();
 
-        // Check watchlist status
         $inWatchlist = false;
         if (session()->get('is_logged_in')) {
             $watchlistModel = new WatchlistModel();
@@ -118,8 +134,6 @@ class Movie extends Controller
         }
 
         $db = \Config\Database::connect();
-
-        // Make sure the review belongs to the logged-in user
         $review = $db->table('reviews')
                      ->where('id', $reviewId)
                      ->where('user_id', session()->get('user_id'))
@@ -151,10 +165,7 @@ class Movie extends Controller
         }
 
         $watchlistModel = new WatchlistModel();
-        $existing = $watchlistModel
-            ->where('user_id', $userId)
-            ->where('movie_id', $movieId)
-            ->first();
+        $existing = $watchlistModel->where('user_id', $userId)->where('movie_id', $movieId)->first();
 
         if ($existing) {
             $watchlistModel->where('user_id', $userId)->where('movie_id', $movieId)->delete();
@@ -202,5 +213,14 @@ class Movie extends Controller
         if ($response === false) return [];
         $data = json_decode($response, true);
         return $data['results'] ?? [];
+    }
+
+    private function getGenres(): array
+    {
+        $url = "https://api.themoviedb.org/3/genre/movie/list?api_key={$this->apiKey}&language=en-US";
+        $response = @file_get_contents($url);
+        if ($response === false) return [];
+        $data = json_decode($response, true);
+        return $data['genres'] ?? [];
     }
 }
