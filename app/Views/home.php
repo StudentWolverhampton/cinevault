@@ -7,7 +7,7 @@
     <hr class="border-secondary mt-2">
 </div>
 
-<h1 class="mb-4 text-white">🔥 Trending This Week</h1>
+<h1 class="mb-4" style="color: var(--text-main);">🔥 Trending This Week</h1>
 
 <div class="row" id="movieGrid">
     <?php if (empty($movies)): ?>
@@ -18,19 +18,19 @@
         <?php foreach ($movies as $movie): ?>
             <div class="col-md-3 col-sm-6 mb-4">
                 <a href="<?= base_url('movie/detail/' . $movie['id']) ?>" class="text-decoration-none">
-                    <div class="card h-100 border-0 shadow movie-card-hover" style="background:#1e1e1e;">
+                    <div class="card h-100 border-0 shadow movie-card-hover">
                         <?php if (!empty($movie['poster_path'])): ?>
                             <img src="https://image.tmdb.org/t/p/w500<?= $movie['poster_path'] ?>"
                                  class="card-img-top" alt="<?= esc($movie['title']) ?>">
                         <?php else: ?>
                             <div class="d-flex align-items-center justify-content-center bg-secondary"
                                  style="height:300px;">
-                                <span style="color:#aaa;">No Image</span>
+                                <span style="color: var(--text-muted);">No Image</span>
                             </div>
                         <?php endif; ?>
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-light"><?= esc($movie['title']) ?></h5>
-                            <p class="small flex-grow-1" style="color:#bbb;">
+                            <h5 class="card-title mb-1" style="color: var(--text-main);"><?= esc($movie['title']) ?></h5>
+                            <p class="small flex-grow-1" style="color: var(--text-muted);">
                                 <?= substr($movie['overview'] ?? 'No description available.', 0, 90) ?>...
                             </p>
                             <span class="badge bg-warning text-dark fs-6">
@@ -66,10 +66,10 @@ function loadRecentlyViewed() {
             grid.innerHTML += `
                 <div class="col-md-3 col-sm-6 mb-3">
                     <a href="${baseUrl}movie/detail/${movie.id}" class="text-decoration-none">
-                        <div class="card border-0 h-100 movie-card-hover" style="background:#1e1e1e;">
+                        <div class="card border-0 h-100 movie-card-hover">
                             <img src="${poster}" class="card-img-top" alt="${movie.title}">
                             <div class="card-body p-2">
-                                <p class="text-light small mb-1 fw-bold">${movie.title}</p>
+                                <p class="small mb-1 fw-bold" style="color: var(--text-main);">${movie.title}</p>
                                 <span class="badge bg-warning text-dark">${movie.rating} ★</span>
                             </div>
                         </div>
