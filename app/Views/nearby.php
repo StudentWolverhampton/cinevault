@@ -1,38 +1,31 @@
 <?= $this->include('layout/header') ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="text-white fw-bold">📍 Cinemas Near You</h1>
-    <button id="locateBtn" class="btn btn-warning fw-bold">
-        📡 Find My Location
-    </button>
+    <h1 class="fw-bold" style="color: var(--text-main);">📍 Cinemas Near You</h1>
+    <button id="locateBtn" class="btn btn-warning fw-bold">📡 Find My Location</button>
 </div>
 
-<!-- Status message -->
 <div id="statusMsg" class="alert alert-secondary" style="display:none;"></div>
 
-<!-- Map container -->
 <div id="mapContainer" style="display:none;" class="mb-4">
     <iframe id="mapFrame"
             style="width:100%; height:400px; border:0; border-radius:8px;"
-            loading="lazy"
-            allowfullscreen>
-    </iframe>
+            loading="lazy" allowfullscreen></iframe>
 </div>
 
-<!-- Results -->
 <div id="resultsArea">
-    <div class="text-center py-5 text-muted">
-        <p class="fs-5">Click <strong>Find My Location</strong> to discover cinemas near you.</p>
-        <p class="small">Uses your device's GPS — no data is stored.</p>
+    <div class="text-center py-5">
+        <p class="fs-5" style="color: var(--text-muted);">Click <strong>Find My Location</strong> to discover cinemas near you.</p>
+        <p class="small" style="color: var(--text-muted);">Uses your device's GPS — no data is stored.</p>
     </div>
 </div>
 
 <script>
-const locateBtn  = document.getElementById('locateBtn');
-const statusMsg  = document.getElementById('statusMsg');
+const locateBtn   = document.getElementById('locateBtn');
+const statusMsg   = document.getElementById('statusMsg');
 const resultsArea = document.getElementById('resultsArea');
 const mapContainer = document.getElementById('mapContainer');
-const mapFrame   = document.getElementById('mapFrame');
+const mapFrame    = document.getElementById('mapFrame');
 
 function showStatus(msg, type = 'info') {
     statusMsg.style.display = 'block';
@@ -52,17 +45,15 @@ locateBtn.addEventListener('click', function () {
 
     navigator.geolocation.getCurrentPosition(
         position => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
+            const lat      = position.coords.latitude;
+            const lon      = position.coords.longitude;
             const accuracy = Math.round(position.coords.accuracy);
 
             showStatus(`✅ Location found! Accuracy: ~${accuracy}m. Searching for cinemas...`, 'success');
 
-            // Show OpenStreetMap centered on user
             mapContainer.style.display = 'block';
             mapFrame.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.05},${lon+0.05},${lat+0.05}&layer=mapnik&marker=${lat},${lon}`;
 
-            // Query Overpass API for cinemas within 10km
             const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];(node["amenity"="cinema"](around:10000,${lat},${lon});way["amenity"="cinema"](around:10000,${lat},${lon}););out center;`;
 
             fetch(overpassUrl)
@@ -75,15 +66,14 @@ locateBtn.addEventListener('click', function () {
                     if (cinemas.length === 0) {
                         resultsArea.innerHTML = `
                             <div class="alert alert-warning">
-                                No cinemas found within 10km of your location.
-                                Try searching on <a href="https://www.google.com/maps/search/cinema" target="_blank" class="alert-link">Google Maps</a>.
+                                No cinemas found within 10km.
+                                Try <a href="https://www.google.com/maps/search/cinema" target="_blank" class="alert-link">Google Maps</a>.
                             </div>`;
                         return;
                     }
 
                     showStatus(`✅ Found ${cinemas.length} cinema(s) near you!`, 'success');
 
-                    // Calculate distance
                     function getDistance(lat1, lon1, lat2, lon2) {
                         const R = 6371;
                         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -94,7 +84,6 @@ locateBtn.addEventListener('click', function () {
                         return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(1);
                     }
 
-                    // Sort by distance
                     cinemas.sort((a, b) => {
                         const aLat = a.lat || a.center?.lat;
                         const aLon = a.lon || a.center?.lon;
@@ -105,8 +94,8 @@ locateBtn.addEventListener('click', function () {
 
                     let html = '<div class="row">';
                     cinemas.forEach(cinema => {
-                        const cLat = cinema.lat || cinema.center?.lat;
-                        const cLon = cinema.lon || cinema.center?.lon;
+                        const cLat    = cinema.lat || cinema.center?.lat;
+                        const cLon    = cinema.lon || cinema.center?.lon;
                         const name    = cinema.tags?.name || 'Unknown Cinema';
                         const address = cinema.tags?.['addr:street']
                             ? `${cinema.tags['addr:housenumber'] || ''} ${cinema.tags['addr:street']}`.trim()
@@ -118,19 +107,15 @@ locateBtn.addEventListener('click', function () {
 
                         html += `
                         <div class="col-md-4 mb-4">
-                            <div class="card border-0 h-100" style="background:#1e1e1e;">
+                            <div class="card border-0 h-100">
                                 <div class="card-body">
                                     <h5 class="text-warning fw-bold">🎬 ${name}</h5>
-                                    <p class="text-muted small mb-1">📍 ${address}</p>
-                                    <p class="text-light mb-2">
-                                        <span class="badge bg-warning text-dark">${dist} km away</span>
-                                    </p>
-                                    ${phone ? `<p class="text-muted small mb-1">📞 ${phone}</p>` : ''}
+                                    <p style="color:var(--text-muted);" class="small mb-1">📍 ${address}</p>
+                                    <p class="mb-2"><span class="badge bg-warning text-dark">${dist} km away</span></p>
+                                    ${phone ? `<p style="color:var(--text-muted);" class="small mb-1">📞 ${phone}</p>` : ''}
                                     <div class="d-flex gap-2 mt-3">
-                                        <a href="${mapsUrl}" target="_blank" class="btn btn-warning btn-sm fw-bold">
-                                            🗺️ Get Directions
-                                        </a>
-                                        ${website ? `<a href="${website}" target="_blank" class="btn btn-outline-light btn-sm">Website</a>` : ''}
+                                        <a href="${mapsUrl}" target="_blank" class="btn btn-warning btn-sm fw-bold">🗺️ Directions</a>
+                                        ${website ? `<a href="${website}" target="_blank" class="btn btn-outline-warning btn-sm">Website</a>` : ''}
                                     </div>
                                 </div>
                             </div>
